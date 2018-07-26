@@ -9,6 +9,7 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,6 +32,11 @@ import org.osmdroid.views.overlay.ScaleBarOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import jpstrack.fileio.FileNameUtils;
+import jpstrack.fileio.GPSFileSaver;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -132,26 +138,34 @@ public class MainActivity extends AppCompatActivity {
         setEnableMapControls(true);
     }
 
+    Executor threadPool = Executors.newSingleThreadExecutor();
+
     public void saveDrawing(View v) {
         if (line.size() == 0) {
             Toast.makeText(this, "Nothing to save", Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(this, "Saving " + line.size() + " points", Toast.LENGTH_SHORT).show();
-        final BoundingBox bbox = mDrawingOverlay.getBounds();
-        final double latNorth = bbox.getLatNorth(), latSpan = bbox.getLatitudeSpan();
-        final double lonWest = bbox.getLonWest(), lonSpan = bbox.getLatitudeSpan();
-        Log.d(TAG, "BBOX" + bbox);
-        int w = mMap.getWidth();
-        int h = mMap.getHeight();
-
-        for (PointF pf : line) {
-            final float x = pf.x;
-            final float y = pf.y;
-
-            final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
-            Log.d(TAG, "P: " + pf + "; Geo: " + iGeoPoint.toString());
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            Toast.makeText(this, "Unable to save; media not mounted", Toast.LENGTH_LONG).show();
+            return;
         }
+        Toast.makeText(this, "Saving " + line.size() + " points", Toast.LENGTH_SHORT).show();
+        String fileName = FileNameUtils.getNextFilename();
+        threadPool.execute( () -> {
+            final BoundingBox bbox = mDrawingOverlay.getBounds();
+            GPSFileSaver saver = new GPSFileSaver(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+            saver.startFile();
+
+            for (PointF pf : line) {
+                        final float x = pf.x;
+                        final float y = pf.y;
+
+                        final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
+                        saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
+            }
+            saver.close();
+        });
+        Toast.makeText(this, "File saved in " + fileName, Toast.LENGTH_LONG).show();
     }
 
     public void discardDrawing(View v) {

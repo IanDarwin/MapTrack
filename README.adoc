@@ -6,6 +6,17 @@ and save the track as a GPX file.
 Might be useful in testing a navigator app, for example.
 May in fact have no real practical use!
 
+== Layout
+
+This project follows standard Android Studio / Gradle conventions:
+
+Source is in _app/src_
+
+Generated APK is in _app/build_, e.g., 
+./app/build/intermediates/instant-run-apk/debug/app-debug.apk
+
+To run the project, just open in Android Studio and run it.
+
 == Usage
 
 * Run the app.
