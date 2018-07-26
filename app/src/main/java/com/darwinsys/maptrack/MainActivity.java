@@ -5,7 +5,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.Location;
@@ -16,13 +15,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MapView mMap;
     private TextView mNoteText;
-    private volatile boolean drawing;
+    private boolean drawing;
     private static final float STROKE_WIDTH = 5f;
 
     /** Need to track this so the dirty region can accommodate the stroke. **/
@@ -68,8 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         mMap.setTileSource(TileSourceFactory.MAPNIK);
 
-        mMap.setBuiltInZoomControls(true);
-        mMap.setMultiTouchControls(true);
+        setEnableMapControls(true);
 
         // Get last known location (should use a callback to find current, but this will do for now)
         Location where = ((LocationManager)getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -86,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         mapController.setCenter(origin);
 
         mMap.getOverlays().add(mDrawingOverlay);
-        mMap.setOnTouchListener(onTouchListener);
 
         paint.setAntiAlias(true);
         paint.setColor(Color.BLUE);
@@ -94,6 +91,12 @@ public class MainActivity extends AppCompatActivity {
         paint.setStrokeJoin(Paint.Join.ROUND);
         paint.setStrokeWidth(STROKE_WIDTH);
 
+    }
+
+    private void setEnableMapControls(Boolean b) {
+        drawing = !b;
+        mMap.setBuiltInZoomControls(b);
+        mMap.setMultiTouchControls(b);
     }
 
     /**
@@ -108,29 +111,32 @@ public class MainActivity extends AppCompatActivity {
 
     public void startDrawing(View v) {
         Log.d(TAG, "startDrawing");
-        drawing = true;
+        // We set the onTouchListener here, which disables all Map controls.
+        // C'est la view; we just want to draw lines on the map.
+        // Fancier: a button to disable this so use can go back to dragging, zooming map.
+        mMap.setOnTouchListener(onTouchListener);
+        setEnableMapControls(false);
     }
 
     public void stopDrawing(View v) {
-        Log.d(TAG, "startDrawing");
-        drawing = false;
+        Log.d(TAG, "stopDrawing");
+        Toast.makeText(this, "Cannot disable drawing yet", Toast.LENGTH_LONG).show();
+        setEnableMapControls(true);
     }
 
     public void saveDrawing(View v) {
-        if (line.size() == 0) {
-            Toast.makeText(this, "No points to save", Toast.LENGTH_LONG).show();
-            return;
-        }
         Toast.makeText(this, "Saving " + line.size() + " points", Toast.LENGTH_SHORT).show();
-        for (PointF p : line) {
-            // convert PointF to Location
-            // pass to saver
+        final BoundingBox bb = mDrawingOverlay.getBounds();
+        int w = mMap.getWidth();
+        int h = mMap.getHeight();
+        for (PointF pf : line) {
+            final GeoPoint geoPoint = bb.getGeoPointOfRelativePositionWithLinearInterpolation(pf.x/w, pf.y/h);
+            Log.d(TAG, "P: " + pf + "; Geo: " + geoPoint.toString());
         }
     }
 
     public void discardDrawing(View v) {
         line.clear();
-        //mDrawingOverlay.
         mMap.invalidate();
     }
 
@@ -148,9 +154,9 @@ public class MainActivity extends AppCompatActivity {
     private final View.OnTouchListener onTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            Log.d(TAG, "onTouch: ");
+            Log.d(TAG, "onTouch: " + event + "; drawing: " + drawing);
             if (!drawing) {
-                return mMap.performClick();
+                return mDrawingOverlay.onTouchEvent(event, mMap);
             }
             float eventX = event.getX();
             float eventY = event.getY();
