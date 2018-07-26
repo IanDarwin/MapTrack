@@ -18,13 +18,16 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.util.GeometryMath;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
+import org.osmdroid.views.overlay.ScaleBarOverlay;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
 
     private MapView mMap;
+    private ScaleBarOverlay mScaleBarOverlay;
     private TextView mNoteText;
     private boolean drawing;
     private static final float STROKE_WIDTH = 5f;
@@ -85,12 +89,17 @@ public class MainActivity extends AppCompatActivity {
 
         mMap.getOverlays().add(mDrawingOverlay);
 
+        // map scale
+        mScaleBarOverlay = new ScaleBarOverlay(mMap);
+        mScaleBarOverlay.setAlignRight(true);
+        mScaleBarOverlay.setAlignBottom(true);
+        mMap.getOverlays().add(mScaleBarOverlay);
+
         paint.setAntiAlias(true);
         paint.setColor(Color.BLUE);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeJoin(Paint.Join.ROUND);
         paint.setStrokeWidth(STROKE_WIDTH);
-
     }
 
     private void setEnableMapControls(Boolean b) {
@@ -112,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     public void startDrawing(View v) {
         Log.d(TAG, "startDrawing");
         // We set the onTouchListener here, which disables all Map controls.
-        // C'est la view; we just want to draw lines on the map.
+        // C'est la vie(w); we just want to draw lines on the map.
         // Fancier: a button to disable this so use can go back to dragging, zooming map.
         mMap.setOnTouchListener(onTouchListener);
         setEnableMapControls(false);
@@ -120,18 +129,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void stopDrawing(View v) {
         Log.d(TAG, "stopDrawing");
-        Toast.makeText(this, "Cannot disable drawing yet", Toast.LENGTH_LONG).show();
         setEnableMapControls(true);
     }
 
     public void saveDrawing(View v) {
+        if (line.size() == 0) {
+            Toast.makeText(this, "Nothing to save", Toast.LENGTH_SHORT).show();
+            return;
+        }
         Toast.makeText(this, "Saving " + line.size() + " points", Toast.LENGTH_SHORT).show();
-        final BoundingBox bb = mDrawingOverlay.getBounds();
+        final BoundingBox bbox = mDrawingOverlay.getBounds();
+        final double latNorth = bbox.getLatNorth(), latSpan = bbox.getLatitudeSpan();
+        final double lonWest = bbox.getLonWest(), lonSpan = bbox.getLatitudeSpan();
+        Log.d(TAG, "BBOX" + bbox);
         int w = mMap.getWidth();
         int h = mMap.getHeight();
+
         for (PointF pf : line) {
-            final GeoPoint geoPoint = bb.getGeoPointOfRelativePositionWithLinearInterpolation(pf.x/w, pf.y/h);
-            Log.d(TAG, "P: " + pf + "; Geo: " + geoPoint.toString());
+            final float x = pf.x;
+            final float y = pf.y;
+
+            final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
+            Log.d(TAG, "P: " + pf + "; Geo: " + iGeoPoint.toString());
         }
     }
 
@@ -141,8 +160,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     List<PointF> line = new ArrayList<>();
+    float lastAddedX, lastAddedY;
     private void addPoint(float x, float y) {
-        PointF point = new PointF(x, y);
+        if (lastAddedX == x && lastAddedY == y) {
+            return; // trim dupes
+        }
+        PointF point = new PointF(lastAddedX = x, lastAddedY = y);
         Log.d(TAG, "Added: " + point);
         line.add(point);
     }
