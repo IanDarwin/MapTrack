@@ -1,0 +1,22 @@
+= MapTrack
+
+This little exercise lets you view a map from OpenStreetMap,
+draw a track on it with your finger,
+and save the track as a GPX file.
+Might be useful in testing a navigator app, for example.
+May in fact have no real practical use!
+
+== Usage
+
+* Run the app.
+* Adjust the map by dragging, zooming, etc.
+* Tap the _Start Drawing_ button.
+* Drag to add your track.
+* When done, press Save.
+The generated filename will be displayed.
+
+== Bugs
+
+Sometimes you have to tape the Start Drawing button twice.
+
+The Clear button clears the data but does not repaint the screen.
