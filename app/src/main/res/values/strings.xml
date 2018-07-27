@@ -5,7 +5,6 @@
 
 	<!-- Controls -->
     <string name="start_drawing">Start Drawing</string>
-    <string name="stop_drawing">Stop Drawing</string>
     <string name="save_drawing">Save</string>
     <string name="restart_drawing">New</string>
 

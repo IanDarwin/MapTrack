@@ -5,7 +5,6 @@
 
 	<!-- Controls -->
     <string name="start_drawing">Empece dibujo</string>
-    <string name="stop_drawing">Termine dibujo</string>
     <string name="save_drawing">Guardar</string>
     <string name="restart_drawing">Nuevo</string>
 

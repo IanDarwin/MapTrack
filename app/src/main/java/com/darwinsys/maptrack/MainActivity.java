@@ -136,11 +136,6 @@ public class MainActivity extends AppCompatActivity {
         setEnableMapControls(false);
     }
 
-    public void stopDrawing(View v) {
-        Log.d(TAG, "stopDrawing");
-        setEnableMapControls(true);
-    }
-
     Executor threadPool = Executors.newSingleThreadExecutor();
 
     public void saveDrawing(View v) {
@@ -163,8 +158,10 @@ public class MainActivity extends AppCompatActivity {
                 saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
             }
             saver.close();
+            setEnableMapControls(true);
         });
         Toast.makeText(this, String.format(getString(R.string.file_saved), fileName), Toast.LENGTH_LONG).show();
+
     }
 
     public void discardDrawing(View v) {

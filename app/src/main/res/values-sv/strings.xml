@@ -5,7 +5,6 @@
 
 	<!-- Controls -->
     <string name="start_drawing">Börja rita </string>
-    <string name="stop_drawing">Sluta ritning</string>
     <string name="save_drawing">Spara </string>
     <string name="restart_drawing">Börja</string>
 
