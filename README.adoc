@@ -53,8 +53,4 @@ $ head 201807270945.gpx							# Examine the file with "head" or "more"
 $
 ----
 
-== Bugs
-
-Sometimes you have to tap the Start Drawing button twice.
-
-The Clear button clears the data but does not repaint the screen.
+Then do what you will with the GPX file.
