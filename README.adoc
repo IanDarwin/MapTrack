@@ -26,8 +26,35 @@ To run the project, just open in Android Studio and run it.
 * When done, press Save.
 The generated filename will be displayed.
 
+== Pulling GPX files
+
+Use the ADB, Luke! `adb` uses `-d` for the attached device, `-e` for one emulator. If you have more
+than one device or more than one emulator, RTFM to learn about `-s`.
+
+----
+$ adb -d ls /sdcard/download		# get listing of Download folder
+000041f9 00001000 5b5b21e8 .
+000041f9 00001000 5b5b2161 ..
+000081b0 0000eeaf 5a0b55fb mumbleFoo.json
+000081b0 0000a66d 5b5b21e8 201807270945.gpx
+$ adb -d pull /sdcard/download/201807270945.gpx	# Bring one GPX from device to computer
+/sdcard/download/201807270945.gpx: 1 file pulled. 3.5 MB/s (42605 bytes in 0.012s)
+$ head 201807270945.gpx							# Examine the file with "head" or "more"
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<gpx version="1.1"
+    creator="GpsTrack java client"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns='http://www.topografix.com/GPX/1/1'
+    xsi:schemaLocation='http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd'>
+  <metadata>
+    <name>jpstrack GPS Receiver track log</name>
+    <time>2018-07-27T09:45:12.00-0400</time>
+  </metadata>
+$
+----
+
 == Bugs
 
-Sometimes you have to tape the Start Drawing button twice.
+Sometimes you have to tap the Start Drawing button twice.
 
 The Clear button clears the data but does not repaint the screen.
