@@ -12,10 +12,16 @@ This project follows standard Android Studio / Gradle conventions:
 
 Source is in _app/src_
 
+To run the project, just open the top-level directory in Android Studio and run it.
+
 Generated APK is in _app/build_, e.g., 
 ./app/build/intermediates/instant-run-apk/debug/app-debug.apk
 
-To run the project, just open in Android Studio and run it.
+For convenience, there's a saved copy of this in ./bin.
+
+If you're in a hurry:
+
+	adb -d install -t bin/app-debug.apk
 
 == Usage
 
