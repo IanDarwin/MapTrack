@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">MapTrack</string>
+    <string name="welcome_mesg">Bienvenidos al GPX Track Generator!\n
+    Mueva y Zoom el mapa, luego comience a dibujar.</string>
+
+	<!-- Controls -->
+    <string name="start_drawing">Empece dibujo</string>
+    <string name="stop_drawing">Termine dibujo</string>
+    <string name="save_drawing">Guardar</string>
+    <string name="restart_drawing">Nuevo</string>
+
+	<!-- Messages -->
+    <string name="file_saved">Archivo guardado en %s</string>
+    <string name="nothing_to_save">Nada para guardar</string>
+    <string name="media_not_mounted">No puede guardar; /sdcard no montado</string>
+    <string name="could_not_get_location">No se puedo obtener ubicación</string>
+</resources>

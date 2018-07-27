@@ -1,10 +1,15 @@
 <resources>
     <string name="app_name">MapTrack</string>
-    <string name="welcome_mesg">Welcome to the GPX Track Generator!</string>
+    <string name="welcome_mesg">Welcome to the GPX Track Generator!\n
+    Move and Zoom the map, then Start Drawing.</string>
+
+	<!-- Controls -->
     <string name="start_drawing">Start Drawing</string>
     <string name="stop_drawing">Stop Drawing</string>
     <string name="save_drawing">Save</string>
-    <string name="restart_drawing">Start Over</string>
+    <string name="restart_drawing">New</string>
+
+	<!-- Messages -->
     <string name="file_saved">File saved in %s</string>
     <string name="nothing_to_save">Nothing to save</string>
     <string name="media_not_mounted">Unable to save; media not mounted</string>
