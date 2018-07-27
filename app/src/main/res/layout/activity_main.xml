@@ -12,7 +12,8 @@
         android:id="@+id/noteView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Welcome to the GPX Track Generator!"
+        android:text="@string/welcome_mesg"
+        android:textAlignment="center"
         />
 
     <LinearLayout
@@ -23,25 +24,25 @@
         android:layout_height="wrap_content">
 
         <Button
-            android:text="Start Drawing"
+            android:text="@string/start_drawing"
             android:onClick="startDrawing"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
-            android:text="Stop Drawing"
+            android:text="@string/stop_drawing"
             android:onClick="stopDrawing"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
-            android:text="Save"
+            android:text="@string/save_drawing"
             android:onClick="saveDrawing"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <Button
-            android:text="Discard"
+            android:text="@string/restart_drawing"
             android:onClick="discardDrawing"
             style="?android:attr/buttonBarButtonStyle"
             android:layout_width="wrap_content"

@@ -1,6 +1,7 @@
 package com.darwinsys.maptrack;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,6 +12,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,10 +42,11 @@ import com.darwinsys.maptrack.fileio.GPSFileSaver;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
-    public static final int INITIAL_ZOOM_LEVEL = 13;
+    public static final double INITIAL_ZOOM_LEVEL = 13d;
 
     private MapView mMap;
     private ScaleBarOverlay mScaleBarOverlay;
+    private Overlay mDrawingOverlay;
     private TextView mNoteText;
     private boolean drawing;
     private static final float STROKE_WIDTH = 5f;
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         Location where = ((LocationManager)getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
         if (where == null) {
-            mNoteText.setText("Sorry, could not get current location");
+            mNoteText.setText(R.string.could_not_get_location);
             Log.wtf(TAG, "No Last Location, alas");
             return;
         }
@@ -93,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         GeoPoint origin = new GeoPoint(where.getLatitude(), where.getLongitude());
         mapController.setCenter(origin);
 
+        mDrawingOverlay = getDrawingOverlay();
         mMap.getOverlays().add(mDrawingOverlay);
 
         // map scale
@@ -117,18 +121,17 @@ public class MainActivity extends AppCompatActivity {
     /**
      * The Overlay for drawing the line onto
      */
-    private Overlay mDrawingOverlay = new Overlay() {
-        @Override
-        public void draw(Canvas canvas, MapView osmv, boolean shadow) {
-            canvas.drawPath(path, paint);
-        }
-    };
+    public Overlay getDrawingOverlay() {
+        return new Overlay() {
+            @Override
+            public void draw(Canvas canvas, MapView osmv, boolean shadow) {
+                canvas.drawPath(path, paint);
+            }
+        };
+    }
 
     public void startDrawing(View v) {
         Log.d(TAG, "startDrawing");
-        // We set the onTouchListener here, which disables all Map controls.
-        // C'est la vie(w); we just want to draw lines on the map.
-        // Fancier: a button to disable this so use can go back to dragging, zooming map.
         mMap.setOnTouchListener(onTouchListener);
         setEnableMapControls(false);
     }
@@ -142,14 +145,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void saveDrawing(View v) {
         if (line.size() == 0) {
-            Toast.makeText(this, "Nothing to save", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.nothing_to_save, Toast.LENGTH_SHORT).show();
             return;
         }
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            Toast.makeText(this, "Unable to save; media not mounted", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.media_not_mounted, Toast.LENGTH_LONG).show();
             return;
         }
-        Toast.makeText(this, "Saving " + line.size() + " points", Toast.LENGTH_SHORT).show();
         String fileName = FileNameUtils.getNextFilename();
         threadPool.execute( () -> {
             final BoundingBox bbox = mDrawingOverlay.getBounds();
@@ -157,20 +159,19 @@ public class MainActivity extends AppCompatActivity {
             saver.startFile();
 
             for (PointF pf : line) {
-                final float x = pf.x;
-                final float y = pf.y;
-
                 final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
                 saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
             }
             saver.close();
         });
-        Toast.makeText(this, "File saved in " + fileName, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, String.format(getString(R.string.file_saved), fileName), Toast.LENGTH_LONG).show();
     }
 
     public void discardDrawing(View v) {
-        line.clear();
-        mMap.invalidate();
+        Log.d(TAG, "clearing");
+        // Various clearing actions failed to clear the overlay, so start over
+        startActivity(new Intent(this, getClass()));
+        finish();
     }
 
     List<PointF> line = new ArrayList<>();
@@ -180,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
             return; // trim dupes
         }
         PointF point = new PointF(lastAddedX = x, lastAddedY = y);
-        Log.d(TAG, "Added: " + point);
+        // Log.d(TAG, "Added: " + point);
         line.add(point);
     }
 
@@ -191,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
     private final View.OnTouchListener onTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            Log.d(TAG, "onTouch: " + event + "; drawing: " + drawing);
+            // Log.d(TAG, "onTouch: " + event + "; drawing: " + drawing);
             if (!drawing) {
                 return mDrawingOverlay.onTouchEvent(event, mMap);
             }
