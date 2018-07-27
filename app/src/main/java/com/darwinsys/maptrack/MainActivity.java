@@ -25,7 +25,6 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.util.GeometryMath;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
@@ -35,12 +34,13 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-import jpstrack.fileio.FileNameUtils;
-import jpstrack.fileio.GPSFileSaver;
+import com.darwinsys.maptrack.fileio.FileNameUtils;
+import com.darwinsys.maptrack.fileio.GPSFileSaver;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
+    public static final int INITIAL_ZOOM_LEVEL = 13;
 
     private MapView mMap;
     private ScaleBarOverlay mScaleBarOverlay;
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Inflate and create the view including the mMap
         setContentView(R.layout.activity_main);
-        mMap = (MapView) findViewById(R.id.map);
+        mMap = findViewById(R.id.map);
         mNoteText = findViewById(R.id.noteView);
 
         mMap.setTileSource(TileSourceFactory.MAPNIK);
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         IMapController mapController = mMap.getController();
-        mapController.setZoom(11);
+        mapController.setZoom(INITIAL_ZOOM_LEVEL);
         GeoPoint origin = new GeoPoint(where.getLatitude(), where.getLongitude());
         mapController.setCenter(origin);
 
@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Nothing to save", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             Toast.makeText(this, "Unable to save; media not mounted", Toast.LENGTH_LONG).show();
             return;
         }
@@ -157,11 +157,11 @@ public class MainActivity extends AppCompatActivity {
             saver.startFile();
 
             for (PointF pf : line) {
-                        final float x = pf.x;
-                        final float y = pf.y;
+                final float x = pf.x;
+                final float y = pf.y;
 
-                        final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
-                        saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
+                final IGeoPoint iGeoPoint = mMap.getProjection().fromPixels((int) pf.x, (int) pf.y);
+                saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
             }
             saver.close();
         });
