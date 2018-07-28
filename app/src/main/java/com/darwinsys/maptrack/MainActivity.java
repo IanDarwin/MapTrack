@@ -1,6 +1,7 @@
 package com.darwinsys.maptrack;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -13,6 +14,7 @@ import android.location.LocationManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,6 +33,12 @@ import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.ScaleBarOverlay;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -56,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Paint paint = new Paint();
     private Path path = new Path();
+    private File mFileSaved;
 
     /**
      * Optimizes painting by invalidating the smallest possible area.
@@ -150,7 +159,8 @@ public class MainActivity extends AppCompatActivity {
         String fileName = FileNameUtils.getNextFilename();
         threadPool.execute( () -> {
             final BoundingBox bbox = mDrawingOverlay.getBounds();
-            GPSFileSaver saver = new GPSFileSaver(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+            final File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            GPSFileSaver saver = new GPSFileSaver(downloadsDir, fileName);
             saver.startFile();
 
             for (PointF pf : line) {
@@ -158,10 +168,37 @@ public class MainActivity extends AppCompatActivity {
                 saver.write(System.currentTimeMillis(), iGeoPoint.getLatitude(), iGeoPoint.getLongitude());
             }
             saver.close();
+            mFileSaved = new File(downloadsDir, fileName);
             setEnableMapControls(true);
         });
         Toast.makeText(this, String.format(getString(R.string.file_saved), fileName), Toast.LENGTH_LONG).show();
 
+    }
+
+    public void viewXML(View v) {
+        if (mFileSaved == null) {
+            Toast.makeText(this, R.string.save_before_view, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String line = null;
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader is = new BufferedReader(new FileReader(mFileSaved))) {
+            while ((line = is.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+        } catch (IOException e) {
+            Log.wtf(TAG, "IOException reading input", e);
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.title_xml)
+                .setMessage(sb.toString())
+                .setPositiveButton("OK", new AlertDialog.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.cancel();
+                    }
+                })
+                .show();
     }
 
     public void discardDrawing(View v) {

@@ -13,4 +13,7 @@
     <string name="nothing_to_save">Inget att spara</string>
     <string name="media_not_mounted">Kan inte spara; media ej monterat</string>
     <string name="could_not_get_location">Kan inte få aktuell plats</string>
+    <string name="view_xml">XML</string>
+    <string name="save_before_view">Måste spara innan visning.</string>
+    <string name="title_xml">Din sökväg, i XML-format</string>
 </resources>
